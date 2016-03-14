@@ -1,26 +1,9 @@
----
-title: "Step Activity"
-author: "Julia Feys"
-date: "March 13, 2016"
-output: html_document
----
-
-Data was read in using the read.csv function and stored in a data frame.  Date column was transformed into a POSIXct class variable.  Then a new data frame is created, summing the steps by date.
-
-## Mean total number of Steps
-
-```{r, echo=TRUE}
 unzip("activity.zip")
 act <- read.csv("activity.csv")
 library(lubridate)
 act$date <- ymd(as.character(act$date))
 day.totals <- aggregate(act$steps, by=list(as.factor(act$date)), FUN=sum, na.rm=TRUE)
 colnames(day.totals) <- c("date", "total.steps")
-```
-
-Histogram of day.totals:
-
-```{r, echo=TRUE}
 ## Mean and Median
 day.totals.summary <- data.frame(mean=mean(day.totals$total.steps, na.rm=TRUE), median=median(day.totals$total.steps, na.rm=TRUE))
 ## Plot of total steps/day hist
@@ -28,47 +11,23 @@ par(mfrow=c(1,1))
 hist(day.totals$total.steps, xlab="Total Daily Steps", ylab="Freq", main="Histogram of Total Steps per Day", col="lightblue")
 text(x=21000, y=25, labels=paste("Mean: ", as.character(as.integer(day.totals.summary$mean)), "\nMedian: ", as.character(as.integer(day.totals.summary$median))), col="purple")
 
-```
 
-## Average Daily Activity Pattern
-
-A new data frame is created averaging the steps over interval types.
-
-```{r, echo=TRUE}
+## Plot of Avg Steps by Interval
 interval.avg <- aggregate(act$steps, by=list(act$interval), FUN=mean, na.rm=TRUE)
 colnames(interval.avg) <- c("interval", "Average.Steps")
 plot(x=interval.avg$interval, y=interval.avg$Average.Steps, type="l", main="Average Steps by Interval", col="darkblue", lwd=3, ylab="Steps", xlab="Interval")
-
-```
-
-Interval with the max average steps:
-```{r, echo=TRUE}
 max.interval <- interval.avg[interval.avg$Average.Steps==max(interval.avg$Average.Steps),]
 max.interval$interval
 
-```
-## Imputing missing values
-
-Number of NAs:
-
-```{r, echo=TRUE}
 ## Total number of NAs
 sum(is.na(act$steps))
-```
 
-New data set was created using the average step by interval to replace the NA values
-
-```{r, echo=TRUE}
 ## Create new data set and set steps equal to the average for that interval
 act2 <- act
 for(i in 1:nrow(act2)){
   act2[i,1] <- ifelse(is.na(act2[i,1]), interval.avg[interval.avg$interval==act2[i,3], 2], act2[i,1])
 }
-```
 
-How do the orginal and the new dataset compare?  The mean value is increased.  There are relatively more values in the 10k-15k range.
-
-```{r, echo=TRUE}
 day.totals2 <- aggregate(act2$steps, by=list(as.factor(act2$date)), FUN=sum, na.rm=TRUE)
 colnames(day.totals2) <- c("date", "total.steps")
 ## Mean and Median
@@ -79,13 +38,7 @@ hist(day.totals$total.steps, xlab="Total Daily Steps", ylab="Freq", main="Histog
 text(x=21000, y=20, labels=paste("Mean: ", as.character(as.integer(day.totals.summary$mean)), "\nMedian: ", as.character(as.integer(day.totals.summary2$median))), col="purple")
 hist(day.totals2$total.steps, xlab="Total Daily Steps", ylab="Freq", main="Histogram of Total Steps per Day (NAs imputed)", col="lightblue")
 text(x=21000, y=25, labels=paste("Mean: ", as.character(as.integer(day.totals.summary2$mean)), "\nMedian: ", as.character(as.integer(day.totals.summary2$median))), col="purple")
-```
- 
-## Differences in weekday vs weekend activity
 
-A column is added with the day of the week.  Then those dates are classified as either weekend or weekday.  Using the Lattics plotting package, the data is plotted:
-
-```{r, echo=TRUE}
 ##Create weekday factor column
 library("plyr")
 act3 <- act2
@@ -105,6 +58,3 @@ interval.avg3 <- aggregate(act3$steps, by=list(act3$interval, act3$day.type), FU
 library(lattice)
 colnames(interval.avg3) <- c("interval", "day.type", "Average.Steps")
 xyplot(Average.Steps~interval|day.type, data=interval.avg3, type="l", layout=c(1,2), lwd=3, main="Average steps by day type")
-```
-
-Steps are more spread out on Weekend days.  Weekdays, the majority of steps happen in the first part of the day.
